@@ -1,0 +1,71 @@
+
+
+# 1. Preprocess and analyze scRNA-seq data using a library like Scanpy.
+
+import scanpy as sc
+
+# Load scRNA-seq data (assuming 'data_file' is in a compatible format, e.g., loom, h5ad)
+adata = sc.read(data_file)
+
+# Preprocessing
+sc.pp.filter_cells(adata, min_genes=200)
+sc.pp.filter_genes(adata, min_cells=3)
+sc.pp.normalize_total(adata, target_sum=1e4)
+sc.pp.log1p(adata)
+sc.pp.highly_variable_genes(adata, min_mean=0.0125, max_mean=3, min_disp=0.5)
+adata = adata[:, adata.var.highly_variable]
+
+# Dimensionality reduction and clustering
+sc.tl.pca(adata, svd_solver='arpack')
+sc.pp.neighbors(adata)
+sc.tl.umap(adata)
+sc.tl.leiden(adata)
+
+# Find marker genes
+sc.tl.rank_genes_groups(adata, 'leiden', method='t-test')
+
+# Plot results (optional)
+sc.pl.umap(adata, color=['leiden', 'top_marker_gene'])
+```
+
+# 2. Convert the analysis results into structured data or metadata.
+
+Example code for extracting cell type information and marker genes:
+```python
+import pandas as pd
+
+# Extract cell type clusters and top marker genes
+clusters = adata.obs['leiden'].value_counts().to_dict()
+marker_genes = pd.DataFrame(adata.uns['rank_genes_groups']['names']).head(10)
+
+# Create a dictionary containing cell type information and top marker genes
+metadata = {'clusters': clusters, 'marker_genes': marker_genes}
+
+
+# 3. Use a pre-trained natural language generation
+
+import openai
+import json
+
+# Set up your OpenAI API key
+openai.api_key = "your_openai_api_key"
+
+def generate_text(prompt):
+    response = openai.Completion.create(
+        engine="text-davinci-002",
+        prompt=prompt,
+        max_tokens=100,
+        n=1,
+        stop=None,
+        temperature=0.5,
+    )
+    return response.choices[0].text.strip()
+    
+# Create a prompt based on the structured data
+prompt = f"Summarize the single-cell RNA-seq analysis results: {json.dumps(metadata)}"
+
+# Generate text using GPT-3
+generated_text = generate_text(prompt)
+
+# Print the generated text
+print(generated_text)
