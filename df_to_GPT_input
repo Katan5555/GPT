@@ -1,0 +1,26 @@
+
+library(dplyr)
+library(jsonlite)
+
+# Function to turn a data frame into a single string
+data_frame_to_string <- function(df) {
+  # Convert the data frame to JSON format
+  json_string <- toJSON(df)
+  
+  # Add a prompt to the JSON string to be fed into GPT-4
+  gpt_4_input <- sprintf('{"input": "Please analyze the following dataset: %s"}', json_string)
+  
+  return(gpt_4_input)
+}
+
+# Example data frame
+example_df <- data.frame(Name = c("Alice", "Bob", "Charlie"),
+                         Age = c(25, 30, 35),
+                         Salary = c(50000, 60000, 70000))
+
+
+# Test the function
+gpt_4_input_string <- data_frame_to_string(example_df)
+cat(gpt_4_input_string)
+
+
